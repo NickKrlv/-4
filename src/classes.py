@@ -151,7 +151,7 @@ if __name__ == "__main__":
             platform = input("Выберите платформу HeadHunter или SuperJob: ").lower()
 
             if platform in ("headhunter", "hh", "HH"):
-                name = input("Введите название вакансии: ")
+                name = input("Введите ключевое слово в вакансии: ")
                 page = int(input("Введите страницу: "))
                 top_n = int(input("Количество вакансий: "))
                 salary = bool(input("Отображать вакансии только с зарплатой?\n"
@@ -164,13 +164,44 @@ if __name__ == "__main__":
                 data_hh = Dump_json_hh(data_hh)
                 data_hh.dump_file()
 
+                with open('vacancies_hh.json', 'r', encoding='utf-8') as file:
+                    data_hh = json.load(file)
+
+                    for vacancy in data_hh:
+                        date = vacancy.get('data')
+                        name = vacancy.get('name')
+                        responsibility = vacancy.get('responsibility')
+                        area = vacancy.get('area')
+                        if vacancy.get('salary_bot'):
+                            salary_bot = vacancy.get('salary_bot')
+                        else:
+                            salary_bot = None
+                        if vacancy.get('salary_top'):
+                            salary_top = vacancy.get('salary_top')
+                        else:
+                            salary_top = None
+                        if salary_bot and salary_top:
+                            print(f'{date} | {name} | {responsibility} | {area} | {salary_bot} - {salary_top}')
+                        else:
+                            print(f'{date} | {name} | {responsibility} | {area}')
+
             elif platform in ("superjob", "sj", "SJ"):
-                name = input("Введите название вакансии: ")
+                name = input("Введите ключевое слово в вакансии: ")
                 page = int(input("Введите страницу: "))
                 top_n = int(input("Количество вакансий: "))
                 data_sj = SuperJob(name, page, top_n).load_vacancies()
                 data_sj = Dump_json_sj(data_sj)
                 data_sj.dump_file()
+
+                with open('vacancies_sj.json', 'r', encoding='utf-8') as file:
+                    data_sj = json.load(file)
+
+                    for vacancy in data_sj:
+                        date = vacancy.get('data')
+                        name = vacancy.get('name')
+                        responsibility = vacancy.get('responsibility')
+
+                        print(f'{date} | {name} | {responsibility}')
 
             else:
                 print("Неизвестная платформа")
@@ -182,4 +213,3 @@ if __name__ == "__main__":
         else:
             print("Неизвестная команда")
             continue
-
