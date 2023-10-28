@@ -126,8 +126,8 @@ class Dump_json_hh(Dump_json):
         self.vacancies = vacancies
 
     def dump_file(self, **kwargs):
-        with open('vacancies.json', 'w', encoding='utf-8') as file:
-            json.dump(self.vacancies, file)
+        with open('vacancies_hh.json', 'w', encoding='utf-8') as file:
+            json.dump(self.vacancies, file, ensure_ascii=False, indent=2)
 
 
 class Dump_json_sj(Dump_json):
@@ -139,5 +139,47 @@ class Dump_json_sj(Dump_json):
         self.vacancies = vacancies
 
     def dump_file(self, **kwargs):
-        with open('vacancies.json', 'w', encoding='utf-8') as file:
-            json.dump(self.vacancies, file)
+        with open('vacancies_sj.json', 'w', encoding='utf-8') as file:
+            json.dump(self.vacancies, file, ensure_ascii=False, indent=2)
+
+
+if __name__ == "__main__":
+
+    while answer := input("Хотите загрузить вакансии из HeadHunter или SuperJob? Да/Нет: ").lower():
+        if answer == "да":
+            platforms = ["headhunter", "superjob"]
+            platform = input("Выберите платформу HeadHunter или SuperJob: ").lower()
+
+            if platform in ("headhunter", "hh", "HH"):
+                name = input("Введите название вакансии: ")
+                page = int(input("Введите страницу: "))
+                top_n = int(input("Количество вакансий: "))
+                salary = bool(input("Отображать вакансии только с зарплатой?\n"
+                                    "По умолчанию True.\n"
+                                    "Введите True или False: "))
+                if salary == "":
+                    salary = True
+
+                data_hh = HeadHunter(name, page, top_n, salary).load_vacancies()
+                data_hh = Dump_json_hh(data_hh)
+                data_hh.dump_file()
+
+            elif platform in ("superjob", "sj", "SJ"):
+                name = input("Введите название вакансии: ")
+                page = int(input("Введите страницу: "))
+                top_n = int(input("Количество вакансий: "))
+                data_sj = SuperJob(name, page, top_n).load_vacancies()
+                data_sj = Dump_json_sj(data_sj)
+                data_sj.dump_file()
+
+            else:
+                print("Неизвестная платформа")
+                continue
+
+        elif answer == "нет":
+            break
+
+        else:
+            print("Неизвестная команда")
+            continue
+
