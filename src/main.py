@@ -106,8 +106,8 @@ class SuperJob(Vacancy, API):
             vacancy_info = {
                 'id': vacancy['id'],
                 'name': vacancy.get('profession', ''),
-                'solary_ot': vacancy.get('payment_from', '') if vacancy.get('payment_from') else None,
-                'solary_do': vacancy.get('payment_to') if vacancy.get('payment_to') else None,
+                'salary_bot': vacancy.get('payment_from', '') if vacancy.get('payment_from') else None,
+                'salary_top': vacancy.get('payment_to') if vacancy.get('payment_to') else None,
                 'responsibility': vacancy.get('candidat').replace('\n', '').replace('•', '')
                 if vacancy.get('candidat') else None,
                 'data': published_at.strftime("%d.%m.%Y"),
@@ -174,6 +174,21 @@ class Filter_vacancies:
         return filtered_vacancies
 
 
+class Sorting:
+    """
+    Сортирует список вакансий по зарплате в порядке убывания.
+
+    Аргументы:
+        vacancies (list): Список вакансий, где каждая вакансия представлена в виде словаря с ключом 'salary_bot'.
+
+    Возвращает:
+        list: Отсортированный список вакансий, отсортированный по зарплате в порядке убывания.
+    """
+
+    @staticmethod
+    def sort_by_salary(vacancies):
+        return sorted(vacancies, key=lambda x: x.get('salary_bot', float('-inf')), reverse=True)
+
 if __name__ == "__main__":
 
     while answer := input("Хотите загрузить вакансии из HeadHunter или SuperJob? Да/Нет: ").lower():
@@ -192,6 +207,11 @@ if __name__ == "__main__":
                     salary = True
 
                 data_hh = HeadHunter(name, page, top_n, salary).load_vacancies()
+
+                if answer_sorting := input("Хотите сортировать вакансии по зарплате?\n"
+                                           "Да/Нет: ").lower():
+                    if answer_sorting == "да":
+                        data_hh = Sorting.sort_by_salary(data_hh)
 
                 if answer_filter := input("Хотите отфильтровать вакансии по вашим\n"
                                           "ключевым словам в описании?\n"
@@ -237,6 +257,11 @@ if __name__ == "__main__":
                 page = int(input("Введите страницу: "))
                 top_n = int(input("Количество вакансий: "))
                 data_sj = SuperJob(name, page, top_n).load_vacancies()
+
+                if answer_sorting := input("Хотите сортировать вакансии по зарплате?\n"
+                                           "Да/Нет: ").lower():
+                    if answer_sorting == "да":
+                        data_sj = Sorting.sort_by_salary(data_sj)
 
                 if answer_filter := input("Хотите отфильтровать вакансии по вашим\n"
                                           "ключевым словам в описании?\n"
