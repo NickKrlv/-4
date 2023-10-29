@@ -1,4 +1,5 @@
-from pprint import pprint
+import pprint
+
 import requests
 from datetime import datetime
 import json
@@ -151,6 +152,28 @@ class Dump_json_sj(Dump_json):
             json.dump(self.vacancies, file, ensure_ascii=False, indent=2)
 
 
+class Filter_vacancies:
+    """
+    Фильтрует заданный список вакансий на основе предоставленных фильтров.
+
+    Параметры:
+        vacancies (list): Список вакансий для фильтрации.
+        filter_words (list): Список слов для фильтрации вакансий.
+
+    Возвращает:
+        list: Отфильтрованный список вакансий, соответствующий любому из фильтровых слов в их поле ответственности.
+    """
+
+    @classmethod
+    def filter(cls, vacancies, filter_words):
+        filtered_vacancies = []
+        for vacancy in vacancies:
+            for word in filter_words:
+                if word in vacancy['responsibility']:
+                    filtered_vacancies.append(vacancy)
+        return filtered_vacancies
+
+
 if __name__ == "__main__":
 
     while answer := input("Хотите загрузить вакансии из HeadHunter или SuperJob? Да/Нет: ").lower():
@@ -169,47 +192,78 @@ if __name__ == "__main__":
                     salary = True
 
                 data_hh = HeadHunter(name, page, top_n, salary).load_vacancies()
-                data_hh = Dump_json_hh(data_hh)
-                data_hh.dump_file()
+
+                if answer_filter := input("Хотите отфильтровать вакансии по вашим\n"
+                                          "ключевым словам в описании?\n"
+                                          "(количество вакансий может уменьшиться) Да/Нет: ").lower():
+                    if answer_filter == "да":
+                        filter_words = input("Введите ключевые слова через пробел: ").split()
+                        filtered_vacancies = Filter_vacancies.filter(data_hh, filter_words)
+                        data_hh = filtered_vacancies
+                        data_hh = Dump_json_hh(data_hh)
+                        data_hh.dump_file()
+
+                    else:
+                        data_hh = Dump_json_hh(data_hh)
+                        data_hh.dump_file()
 
                 with open('vacancies_hh.json', 'r', encoding='utf-8') as file:
                     data_hh = json.load(file)
 
-                    for vacancy in data_hh:
-                        date = vacancy.get('data')
-                        name = vacancy.get('name')
-                        responsibility = vacancy.get('responsibility')
-                        area = vacancy.get('area')
-                        if vacancy.get('salary_bot'):
-                            salary_bot = vacancy.get('salary_bot')
-                        else:
-                            salary_bot = None
-                        if vacancy.get('salary_top'):
-                            salary_top = vacancy.get('salary_top')
-                        else:
-                            salary_top = None
-                        if salary_bot and salary_top:
-                            print(f'{date} | {name} | {responsibility} | {area} | {salary_bot} - {salary_top}')
-                        else:
-                            print(f'{date} | {name} | {responsibility} | {area}')
+                    if len(data_hh) == 0:
+                        print("Ничего не найдено")
+
+                    else:
+                        for vacancy in data_hh:
+                            date = vacancy.get('data')
+                            name = vacancy.get('name')
+                            responsibility = vacancy.get('responsibility')
+                            area = vacancy.get('area')
+                            if vacancy.get('salary_bot'):
+                                salary_bot = vacancy.get('salary_bot')
+                            else:
+                                salary_bot = None
+                            if vacancy.get('salary_top'):
+                                salary_top = vacancy.get('salary_top')
+                            else:
+                                salary_top = None
+                            if salary_bot and salary_top:
+                                print(f'{date} | {name} | {responsibility} | {area} | {salary_bot} - {salary_top}')
+                            else:
+                                print(f'{date} | {name} | {responsibility} | {area}')
 
             elif platform in ("superjob", "sj", "SJ"):
                 name = input("Введите ключевое слово в вакансии: ")
                 page = int(input("Введите страницу: "))
                 top_n = int(input("Количество вакансий: "))
                 data_sj = SuperJob(name, page, top_n).load_vacancies()
-                data_sj = Dump_json_sj(data_sj)
-                data_sj.dump_file()
+
+                if answer_filter := input("Хотите отфильтровать вакансии по вашим\n"
+                                          "ключевым словам в описании?\n"
+                                          "(количество вакансий может уменьшиться) Да/Нет: ").lower():
+                    if answer_filter == "да":
+                        filter_words = input("Введите ключевые слова через пробел: ").split()
+                        filtered_vacancies = Filter_vacancies.filter(data_sj, filter_words)
+                        data_sj = Dump_json_sj(filtered_vacancies)
+                        data_sj.dump_file()
+
+                    else:
+                        data_sj = Dump_json_sj(data_sj)
+                        data_sj.dump_file()
 
                 with open('vacancies_sj.json', 'r', encoding='utf-8') as file:
                     data_sj = json.load(file)
 
-                    for vacancy in data_sj:
-                        date = vacancy.get('data')
-                        name = vacancy.get('name')
-                        responsibility = vacancy.get('responsibility')
+                    if len(data_sj) == 0:
+                        print("Ничего не найдено")
 
-                        print(f'{date} | {name} | {responsibility}')
+                    else:
+                        for vacancy in data_sj:
+                            date = vacancy.get('data')
+                            name = vacancy.get('name')
+                            responsibility = vacancy.get('responsibility')
+
+                            print(f'{date} | {name} | {responsibility}')
 
             else:
                 print("Неизвестная платформа")
