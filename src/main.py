@@ -187,7 +187,11 @@ class Sorting:
 
     @staticmethod
     def sort_by_salary(vacancies):
-        return sorted(vacancies, key=lambda x: x.get('salary_bot', float('-inf')), reverse=True)
+        def get_salary_bot(vacancy):
+            return vacancy.get('salary_bot', float('-inf')) if vacancy.get('salary_bot') is not None else float('-inf')
+
+        return sorted(vacancies, key=get_salary_bot, reverse=True)
+
 
 if __name__ == "__main__":
 
